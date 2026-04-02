@@ -1,0 +1,672 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NPS ID Card Editor</title>
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700;800&family=Open+Sans:wght@400;600&display=swap" rel="stylesheet">
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Open Sans', sans-serif;
+    background: #1a1a2e;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 30px 20px;
+    color: #fff;
+  }
+
+  h1 {
+    font-family: 'Montserrat', sans-serif;
+    font-size: 1.3rem;
+    letter-spacing: 2px;
+    color: #4fc3f7;
+    margin-bottom: 28px;
+    text-transform: uppercase;
+  }
+
+  .layout {
+    display: flex;
+    gap: 36px;
+    align-items: flex-start;
+    flex-wrap: wrap;
+    justify-content: center;
+    width: 100%;
+    max-width: 1000px;
+  }
+
+  /* ===== CARD ===== */
+  .card-wrapper {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .lanyard-strap {
+    width: 16px;
+    height: 55px;
+    background: linear-gradient(180deg, #5bc8f5 0%, #1976d2 100%);
+    border-radius: 3px;
+    margin-bottom: -2px;
+    position: relative;
+    z-index: 0;
+  }
+
+  .clip {
+    width: 32px;
+    height: 32px;
+    background: linear-gradient(135deg, #d0d0d0, #888);
+    border-radius: 50%;
+    border: 3px solid #aaa;
+    margin-bottom: -4px;
+    position: relative;
+    z-index: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .clip::after {
+    content: '';
+    width: 10px; height: 10px;
+    background: #ccc;
+    border-radius: 50%;
+    border: 2px solid #999;
+  }
+
+  .card {
+    width: 330px;
+    background: linear-gradient(160deg, #080810 55%, #0a1f3a 100%);
+    border-radius: 20px;
+    overflow: hidden;
+    box-shadow: 0 24px 70px rgba(0,0,0,0.8), 0 0 0 1.5px rgba(79,195,247,0.2);
+    position: relative;
+    padding-bottom: 26px;
+    margin-top: 8px;
+  }
+
+  /* Animated wave background */
+  .wave-bg {
+    position: absolute;
+    bottom: 0; left: 0;
+    width: 100%; height: 48%;
+    pointer-events: none;
+    overflow: hidden;
+    border-radius: 0 0 20px 20px;
+  }
+  .wave-bg svg { width: 100%; height: 100%; }
+
+  /* Card Header */
+  .card-header {
+    padding: 20px 18px 14px;
+    text-align: center;
+    background: linear-gradient(180deg, #050510 0%, #0c1a30 100%);
+    border-bottom: 1px solid rgba(79,195,247,0.15);
+    position: relative;
+    z-index: 2;
+  }
+
+  .logo-area {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 70px;
+    cursor: pointer;
+    position: relative;
+  }
+
+  /* Logo image mode */
+  .logo-area img.logo-img {
+    max-height: 72px;
+    max-width: 220px;
+    object-fit: contain;
+  }
+
+  /* Fallback SVG logo */
+  .logo-svg-wrap {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .nps-letters {
+    font-family: 'Montserrat', sans-serif;
+    font-size: 2.6rem;
+    font-weight: 900;
+    background: linear-gradient(180deg, #7de8ff 0%, #1db8e8 50%, #0a8ec5 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    letter-spacing: -2px;
+    line-height: 1;
+    position: relative;
+  }
+
+  /* Swoosh arc around NPS */
+  .swoosh {
+    position: absolute;
+    top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+    width: 86px; height: 86px;
+    pointer-events: none;
+  }
+
+  .company-name-h {
+    font-family: 'Montserrat', sans-serif;
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: #dde8f0;
+    letter-spacing: 0.3px;
+    margin-top: 5px;
+  }
+  .tagline-h {
+    font-size: 0.6rem;
+    color: #607d8b;
+    font-style: italic;
+    margin-top: 2px;
+  }
+
+  /* Card Body */
+  .card-body {
+    padding: 16px 18px 0;
+    position: relative;
+    z-index: 2;
+  }
+
+  .person-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 16px;
+  }
+
+  .photo-ring {
+    width: 94px; height: 94px;
+    border-radius: 50%;
+    border: 3px solid #29b6f6;
+    overflow: hidden;
+    flex-shrink: 0;
+    background: #0d1f38;
+    cursor: pointer;
+    position: relative;
+    box-shadow: 0 0 0 2px rgba(41,182,246,0.25), 0 0 14px rgba(41,182,246,0.15);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .photo-ring img {
+    width: 100%; height: 100%;
+    object-fit: cover;
+    border-radius: 50%;
+    display: block;
+  }
+  .photo-ring .ph-placeholder {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 3px;
+    color: #546e7a;
+    font-size: 0.5rem;
+    text-align: center;
+  }
+
+  .info-col { flex: 1; }
+
+  .pname {
+    font-family: 'Montserrat', sans-serif;
+    font-size: 1.12rem;
+    font-weight: 800;
+    color: #fff;
+    line-height: 1.15;
+    letter-spacing: 0.8px;
+    text-transform: uppercase;
+  }
+  .prole {
+    font-size: 0.7rem;
+    color: #29b6f6;
+    font-weight: 600;
+    margin-top: 5px;
+    line-height: 1.3;
+  }
+  .pdivider {
+    height: 1px;
+    background: rgba(79,195,247,0.2);
+    margin: 5px 0;
+  }
+  .pcompany {
+    font-family: 'Montserrat', sans-serif;
+    font-size: 0.68rem;
+    font-weight: 700;
+    color: #e0e0e0;
+    line-height: 1.35;
+  }
+
+  .details {
+    display: flex;
+    flex-direction: column;
+    gap: 7px;
+    margin-bottom: 14px;
+  }
+  .det-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.71rem;
+    color: #cfd8dc;
+  }
+  .det-icon {
+    width: 20px; height: 20px;
+    background: rgba(41,182,246,0.1);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+  .det-icon svg { width: 10px; height: 10px; }
+
+  .bottom-row {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    padding: 0 2px;
+    position: relative;
+    z-index: 2;
+  }
+
+  .qr-box {
+    width: 66px; height: 66px;
+    background: #fff;
+    border-radius: 6px;
+    overflow: hidden;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+  .qr-box img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .qr-ph {
+    display: flex; flex-direction: column; align-items: center; gap: 2px;
+    color: #999; font-size: 0.42rem; text-align: center;
+  }
+
+  /* ===== EDITOR ===== */
+  .editor {
+    background: rgba(255,255,255,0.035);
+    border: 1px solid rgba(79,195,247,0.14);
+    border-radius: 16px;
+    padding: 22px;
+    width: 310px;
+    backdrop-filter: blur(8px);
+  }
+
+  .editor h2 {
+    font-family: 'Montserrat', sans-serif;
+    font-size: 0.75rem;
+    letter-spacing: 2px;
+    color: #4fc3f7;
+    text-transform: uppercase;
+    margin-bottom: 16px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid rgba(79,195,247,0.14);
+  }
+
+  .section-label {
+    font-size: 0.6rem;
+    color: #4fc3f7;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    margin: 14px 0 8px;
+    font-weight: 600;
+  }
+
+  .field-group { margin-bottom: 11px; }
+
+  label {
+    display: block;
+    font-size: 0.62rem;
+    color: #78909c;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    margin-bottom: 4px;
+  }
+
+  input[type="text"], input[type="email"], input[type="tel"] {
+    width: 100%;
+    background: rgba(255,255,255,0.055);
+    border: 1px solid rgba(79,195,247,0.18);
+    border-radius: 7px;
+    padding: 7px 11px;
+    color: #fff;
+    font-size: 0.8rem;
+    font-family: 'Open Sans', sans-serif;
+    outline: none;
+    transition: border-color 0.2s, background 0.2s;
+  }
+  input:focus {
+    border-color: #29b6f6;
+    background: rgba(41,182,246,0.07);
+  }
+
+  .upload-btn {
+    width: 100%;
+    padding: 9px;
+    border-radius: 7px;
+    border: 1px dashed rgba(79,195,247,0.45);
+    background: rgba(79,195,247,0.07);
+    color: #4fc3f7;
+    cursor: pointer;
+    font-family: 'Montserrat', sans-serif;
+    font-size: 0.73rem;
+    font-weight: 700;
+    letter-spacing: 0.8px;
+    text-transform: uppercase;
+    transition: all 0.2s;
+    text-align: center;
+  }
+  .upload-btn:hover { background: rgba(79,195,247,0.16); }
+
+  .dl-btn {
+    width: 100%;
+    padding: 11px;
+    border-radius: 9px;
+    border: none;
+    cursor: pointer;
+    font-family: 'Montserrat', sans-serif;
+    font-size: 0.8rem;
+    font-weight: 800;
+    letter-spacing: 1.2px;
+    text-transform: uppercase;
+    background: linear-gradient(135deg, #1565c0, #29b6f6);
+    color: #fff;
+    box-shadow: 0 4px 18px rgba(41,182,246,0.35);
+    margin-top: 14px;
+    transition: all 0.2s;
+  }
+  .dl-btn:hover { transform: translateY(-1px); box-shadow: 0 6px 24px rgba(41,182,246,0.5); }
+
+  input[type="file"] { display: none; }
+
+  .tip { font-size: 0.58rem; color: #546e7a; margin-top: 3px; }
+  .gap8 { margin-bottom: 8px; }
+</style>
+</head>
+<body>
+
+<h1>NPS ID Card Editor</h1>
+
+<div class="layout">
+
+  <!-- ===== CARD PREVIEW ===== -->
+  <div class="card-wrapper">
+    <div class="lanyard-strap"></div>
+    <div class="clip"></div>
+
+    <div class="card" id="idCard">
+
+      <!-- Wave BG -->
+      <div class="wave-bg">
+        <svg viewBox="0 0 330 240" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="none">
+          <defs>
+            <linearGradient id="wg1" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" style="stop-color:#0b4a8a"/>
+              <stop offset="100%" style="stop-color:#1565c0"/>
+            </linearGradient>
+          </defs>
+          <path d="M0 60 Q82 20 165 65 Q248 110 330 60 L330 240 L0 240 Z" fill="url(#wg1)" opacity="0.45"/>
+          <path d="M0 95 Q82 55 165 100 Q248 145 330 95 L330 240 L0 240 Z" fill="#0d47a1" opacity="0.45"/>
+          <path d="M0 128 Q82 90 165 130 Q248 170 330 128 L330 240 L0 240 Z" fill="#0a3d91" opacity="0.6"/>
+        </svg>
+      </div>
+
+      <!-- Header -->
+      <div class="card-header">
+        <div class="logo-area" id="logoArea" onclick="document.getElementById('logoInput').click()" title="Click to upload logo">
+
+          <!-- SVG Swoosh fallback logo (shown when no image uploaded) -->
+          <div class="logo-svg-wrap" id="logoFallback">
+            <div style="position:relative; display:inline-block;">
+              <svg class="swoosh" viewBox="0 0 90 90" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M18 72 Q5 45 18 18 Q31 -4 55 8" stroke="#29b6f6" stroke-width="3" fill="none" stroke-linecap="round"/>
+                <path d="M72 18 Q85 45 72 72 Q59 94 35 82" stroke="#29b6f6" stroke-width="3" fill="none" stroke-linecap="round"/>
+              </svg>
+              <div class="nps-letters" id="cardLogo">NPS</div>
+            </div>
+            <div class="company-name-h" id="cardCompanyH">Novaprime Servicorp Private Limited</div>
+            <div class="tagline-h" id="cardTaglineH">Powering projects, empowering people</div>
+          </div>
+
+          <!-- Actual logo image (hidden until uploaded) -->
+          <img class="logo-img" id="logoImg" src="" style="display:none" alt="Logo">
+        </div>
+      </div>
+
+      <!-- Body -->
+      <div class="card-body">
+        <div class="person-row">
+          <div class="photo-ring" id="photoRing" onclick="document.getElementById('photoInput').click()">
+            <div class="ph-placeholder" id="phPlaceholder">
+              <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#4fc3f7" stroke-width="1.5">
+                <circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/>
+              </svg>
+              <span>Upload<br>Photo</span>
+            </div>
+            <img id="cardPhoto" src="" style="display:none" alt="photo">
+          </div>
+
+          <div class="info-col">
+            <div class="pname" id="cardName">SAURABH<br>RANJAN</div>
+            <div class="prole" id="cardRole">Placement Co-ordinator (BH-JH)</div>
+            <div class="pdivider"></div>
+            <div class="pcompany" id="cardCompany2">Novaprime Servicorp<br>Private Limited</div>
+          </div>
+        </div>
+
+        <div class="details">
+          <div class="det-row">
+            <div class="det-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="#29b6f6" stroke-width="2">
+                <circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/>
+              </svg>
+            </div>
+            <span>ID: <strong id="cardId">NPSPL0124</strong></span>
+          </div>
+          <div class="det-row">
+            <div class="det-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="#29b6f6" stroke-width="2">
+                <path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07A19.5 19.5 0 013.07 11.5a19.79 19.79 0 01-3.07-8.67A2 2 0 012 .84h3a2 2 0 012 1.72c.127.96.361 1.903.7 2.81a2 2 0 01-.45 2.11L6.09 8.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0122 16.92z"/>
+              </svg>
+            </div>
+            <span id="cardPhone">+91 72828 38485</span>
+          </div>
+          <div class="det-row">
+            <div class="det-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="#29b6f6" stroke-width="2">
+                <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/>
+              </svg>
+            </div>
+            <span id="cardEmail" style="word-break:break-all;font-size:0.67rem">saurabh.ranjan@novaprimeservicorp.com</span>
+          </div>
+        </div>
+
+        <div class="bottom-row">
+          <div></div>
+          <div class="qr-box" id="qrBox" onclick="document.getElementById('qrInput').click()">
+            <div class="qr-ph" id="qrPh">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <rect x="3" y="3" width="7" height="7" stroke="#999" stroke-width="1.5" fill="none"/>
+                <rect x="5" y="5" width="3" height="3" fill="#999"/>
+                <rect x="14" y="3" width="7" height="7" stroke="#999" stroke-width="1.5" fill="none"/>
+                <rect x="16" y="5" width="3" height="3" fill="#999"/>
+                <rect x="3" y="14" width="7" height="7" stroke="#999" stroke-width="1.5" fill="none"/>
+                <rect x="5" y="16" width="3" height="3" fill="#999"/>
+                <rect x="14" y="14" width="3" height="3" fill="#999"/>
+                <rect x="18" y="14" width="3" height="3" fill="#999"/>
+                <rect x="14" y="18" width="3" height="3" fill="#999"/>
+                <rect x="18" y="18" width="3" height="3" fill="#999"/>
+              </svg>
+              <span>QR Code</span>
+            </div>
+            <img id="qrImg" src="" style="display:none" alt="QR">
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== EDITOR PANEL ===== -->
+  <div class="editor">
+    <h2>✏️ Edit Card</h2>
+
+    <div class="section-label">🏢 Company</div>
+
+    <div class="field-group gap8">
+      <button class="upload-btn" onclick="document.getElementById('logoInput').click()">
+        🖼 Upload NPS Logo Image
+      </button>
+      <p class="tip">Upload your actual logo — it will replace the text logo on the card</p>
+      <input type="file" id="logoInput" accept="image/*" onchange="loadLogo(this)">
+    </div>
+
+    <div class="field-group">
+      <label>Company Name</label>
+      <input type="text" id="inputCompany" value="Novaprime Servicorp Private Limited" oninput="updateCard()">
+    </div>
+
+    <div class="field-group">
+      <label>Tagline</label>
+      <input type="text" id="inputTagline" value="Powering projects, empowering people" oninput="updateCard()">
+    </div>
+
+    <div class="section-label">👤 Person</div>
+
+    <div class="field-group gap8">
+      <button class="upload-btn" onclick="document.getElementById('photoInput').click()">
+        📷 Upload Profile Photo
+      </button>
+      <input type="file" id="photoInput" accept="image/*" onchange="loadPhoto(this)">
+    </div>
+
+    <div class="field-group">
+      <label>Full Name</label>
+      <input type="text" id="inputName" value="SAURABH RANJAN" oninput="updateCard()">
+    </div>
+
+    <div class="field-group">
+      <label>Designation / Role</label>
+      <input type="text" id="inputRole" value="Placement Co-ordinator (BH-JH)" oninput="updateCard()">
+    </div>
+
+    <div class="section-label">📋 Details</div>
+
+    <div class="field-group">
+      <label>Employee ID</label>
+      <input type="text" id="inputId" value="NPSPL0124" oninput="updateCard()">
+    </div>
+
+    <div class="field-group">
+      <label>Phone</label>
+      <input type="tel" id="inputPhone" value="+91 72828 38485" oninput="updateCard()">
+    </div>
+
+    <div class="field-group">
+      <label>Email</label>
+      <input type="email" id="inputEmail" value="saurabh.ranjan@novaprimeservicorp.com" oninput="updateCard()">
+    </div>
+
+    <div class="field-group gap8">
+      <button class="upload-btn" onclick="document.getElementById('qrInput').click()">
+        🔳 Upload QR Code
+      </button>
+      <input type="file" id="qrInput" accept="image/*" onchange="loadQR(this)">
+    </div>
+
+    <button class="dl-btn" onclick="downloadCard()">⬇ Download ID Card (PNG)</button>
+  </div>
+
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script>
+function updateCard() {
+  // Name: split at midpoint
+  const raw = document.getElementById('inputName').value.toUpperCase().trim();
+  const words = raw.split(' ');
+  const mid = Math.ceil(words.length / 2);
+  const l1 = words.slice(0, mid).join(' ');
+  const l2 = words.slice(mid).join(' ');
+  document.getElementById('cardName').innerHTML = l2 ? l1 + '<br>' + l2 : l1;
+
+  document.getElementById('cardRole').textContent = document.getElementById('inputRole').value;
+
+  const co = document.getElementById('inputCompany').value;
+  document.getElementById('cardCompanyH').textContent = co;
+  // Split company for body section
+  const coWords = co.split(' ');
+  const coMid = Math.ceil(coWords.length / 2);
+  document.getElementById('cardCompany2').innerHTML = coWords.slice(0,coMid).join(' ') + '<br>' + coWords.slice(coMid).join(' ');
+
+  document.getElementById('cardTaglineH').textContent = document.getElementById('inputTagline').value;
+  document.getElementById('cardId').textContent = document.getElementById('inputId').value;
+  document.getElementById('cardPhone').textContent = document.getElementById('inputPhone').value;
+  document.getElementById('cardEmail').textContent = document.getElementById('inputEmail').value;
+}
+
+function loadLogo(input) {
+  if (!input.files || !input.files[0]) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    const img = document.getElementById('logoImg');
+    img.src = e.target.result;
+    img.style.display = 'block';
+    document.getElementById('logoFallback').style.display = 'none';
+  };
+  reader.readAsDataURL(input.files[0]);
+}
+
+function loadPhoto(input) {
+  if (!input.files || !input.files[0]) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    const img = document.getElementById('cardPhoto');
+    img.src = e.target.result;
+    img.style.display = 'block';
+    document.getElementById('phPlaceholder').style.display = 'none';
+  };
+  reader.readAsDataURL(input.files[0]);
+}
+
+function loadQR(input) {
+  if (!input.files || !input.files[0]) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    const img = document.getElementById('qrImg');
+    img.src = e.target.result;
+    img.style.display = 'block';
+    document.getElementById('qrPh').style.display = 'none';
+  };
+  reader.readAsDataURL(input.files[0]);
+}
+
+function downloadCard() {
+  // Hide lanyard from capture
+  const card = document.getElementById('idCard');
+  html2canvas(card, {
+    scale: 3,
+    backgroundColor: null,
+    useCORS: true,
+    allowTaint: true,
+    logging: false
+  }).then(canvas => {
+    const link = document.createElement('a');
+    link.download = 'NPS_ID_Card.png';
+    link.href = canvas.toDataURL('image/png');
+    link.click();
+  });
+}
+</script>
+</body>
+</html>
